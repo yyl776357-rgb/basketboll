@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <title>🏀 Basketball Clicker</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #b8734a;
+    }
+    #shop {
+      width: 300px;
+      background: #f3f3f3;
+      padding: 10px;
+      border-right: 3px solid #000;
+    }
+    .item {
+      border: 2px solid #000;
+      padding: 8px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+    .item button {
+      margin-top: 5px;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    #game {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-direction: column;
+    }
+    #ball {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    #ball img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    #ball:active img {
+      transform: scale(0.9);
+    }
+    #counter {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      background: #ffffff;
+      padding: 8px 12px;
+      border: 2px solid #000;
+      border-radius: 8px;
+    }
+    #messages {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      font-size: 20px;
+      font-weight: bold;
+      color: red;
+    }
+    #ownedUpgrades {
+      position: absolute;
+      top: 70px;
+      right: 20px;
+      width: 220px;
+      background: #ffffff;
+      border: 2px solid #000;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .points-popup {
+      position: absolute;
+      font-size: 24px;
+      font-weight: bold;
+      color: yellow;
+      text-shadow: 2px 2px 3px black;
+      pointer-events: none;
+      animation: rise 1s forwards;
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-60px); opacity: 0; }
+    }
+
+    #pointsPerSecond {
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 2px black;
+    }
+  </style>
+</head>
+<body>
+
+<div id="shop">
+  <h3>🛒 חנות</h3>
+
+  <div class="item">50 נקודות → +1 כל 30 שניות
+    <button onclick="buyUpgrade(1)">קנה</button>
+  </div>
+  <div class="item">100 נקודות → +2 כל 40 שניות
+    <button onclick="buyUpgrade(2)">קנה</button>
+  </div>
+  <div class="item">200 נקודות → +5 כל 50 שניות
+    <button onclick="buyUpgrade(3)">קנה</button>
+  </div>
+  <div class="item">400 נקודות → +10 כל 60 שניות
+    <button onclick="buyUpgrade(4)">קנה</button>
+  </div>
+  <div class="item">800 נקודות → 🐐 מייקל ג׳ורדן
+    <button onclick="buyUpgrade(5)">קנה</button>
+  </div>
+</div>
+
+<div id="game">
+  <div id="counter">נקודות: 0</div>
+  <div id="ownedUpgrades"><b>השדרוגים שקנית:</b><br>—</div>
+  <div id="messages"></div>
+  <div id="ball">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/7/7a/Basketball.png" alt="Basketball">
+  </div>
+  <div id="pointsPerSecond">נקודות לשנייה: 0</div>
+</div>
+
+<script>
+  let points = 0;
+
+  const counter = document.getElementById('counter');
+  const messageBox = document.getElementById('messages');
+  const ownedBox = document.getElementById('ownedUpgrades');
+  const ball = document.getElementById('ball');
+  const ballImg = ball.querySelector('img');
+  const ppsDisplay = document.getElementById('pointsPerSecond');
+
+  // כמה פעמים קנית כל שדרוג
+  const upgradesOwned = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0
+  };
+
+  const upgrades = {
+    1: { cost: 50, gain: 1, time: 30000, name: 'שדרוג 1' },
+    2: { cost: 100, gain: 2, time: 40000, name: 'שדרוג 2' },
+    3: { cost: 200, gain: 5, time: 50000, name: 'שדרוג 3' },
+    4: { cost: 400, gain: 10, time: 60000, name: 'שדרוג 4' },
+    5: { cost: 800, gain: 25, time: 60000, name: 'מייקל ג׳ורדן 🐐' }
+  };
+
+  function updateCounter() {
+    counter.textContent = 'נקודות: ' + points;
+  }
+
+  function showMessage(text, color = 'red') {
+    messageBox.style.color = color;
+    messageBox.textContent = text;
+    setTimeout(() => messageBox.textContent = '', 2000);
+  }
+
+  function showPointsPopup(amount) {
+    const popup = document.createElement('div');
+    popup.className = 'points-popup';
+    popup.textContent = `+${amount}`;
+    ball.appendChild(popup);
+    setTimeout(() => popup.remove(), 1000);
+  }
+
+  function updatePointsPerSecond() {
+    // סכום כל הנקודות המתווספות לשנייה לפי כל השדרוגים
+    let totalPerSecond = 0;
+    for (let key in upgradesOwned) {
+      if (upgradesOwned[key] > 0) {
+        // נקודות לשנייה = gain / (time / 1000)
+        totalPerSecond += upgradesOwned[key] * (upgrades[key].gain / (upgrades[key].time / 1000));
+      }
+    }
+    ppsDisplay.textContent = 'נקודות לשנייה: ' + totalPerSecond.toFixed(2);
+  }
+
+  // לחיצה על הכדור
+  ballImg.addEventListener('click', () => {
+    let clickPoints = 1;
+    points += clickPoints;
+    updateCounter();
+    showPointsPopup(clickPoints);
+  });
+
+  // קניית שדרוגים
+  function buyUpgrade(id) {
+    const up = upgrades[id];
+
+    if (points < up.cost) {
+      showMessage('אין לך מספיק נקודות', 'red');
+      return;
+    }
+
+    points -= up.cost;
+    upgradesOwned[id] += 1; 
+    updateCounter();
+    showMessage('נקנהההה!!!', 'green');
+
+    // עדכון רשימת השדרוגים
+    let ownedText = '<b>השדרוגים שקנית:</b><br>';
+    for (let key in upgradesOwned) {
+      if (upgradesOwned[key] > 0) {
+        ownedText += `✔ ${upgrades[key].name} x${upgradesOwned[key]}<br>`;
+      }
+    }
+    ownedBox.innerHTML = ownedText;
+
+    updatePointsPerSecond();
+
+    // מוסיף נקודות אוטומטיות לפי השדרוג
+    setInterval(() => {
+      const totalGain = upgradesOwned[id] * up.gain;
+      points += totalGain;
+      updateCounter();
+      showPointsPopup(totalGain);
+      updatePointsPerSecond();
+    }, up.time);
+  }
+
+</script>
+
+</body>
+</html>
+
+
